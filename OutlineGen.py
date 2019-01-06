@@ -17,14 +17,14 @@
 # ##### END GPL LICENSE BLOCK #####
 
 # Geometric Outlines Generator (W.I.P.)
-# alpha 0.41
+# alpha 0.42
 # Pablo Gentile 1/2019
 
 bl_info = {
     "name": "GENerate OUTlines",
     "category": "Object",
     "author": "Pablo Gentile",
-    "version": (0, 0, 41),
+    "version": (0, 0, 43),
     "blender": (2, 80, 0),
     "location": "View3D > Tool Shelf",
     "description": "Adds and administrates a combo of modifiers, vertex groups and materialas (TO DO) to generate geometric inverted hull outlines to objects that work in realtime",
@@ -204,21 +204,38 @@ class genNormals2Thickness(bpy.types.Operator):
         bpy.context.active_object.data.update()  
         return {'FINISHED'}
 
+class genAddOutlineMaterial(bpy.types.Operator):
+    """Adds a Material to make outlines"""
+    bl_idname = "object.gen_addoutlinemat"
+    bl_label = "add outlines materials"
+
+    C = bpy.context
+    #obj = bpy.context.active_object
+    #ob = obj
+    
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None
+    
+    def execute(self, context):
+        print('TO DO. Just a placeholder')
+        return {'FINISHED'}
+
 
     ######################################
     ################# PANEL
     
 class genOutlinesPanel(bpy.types.Panel):
     """Creates a Panel in the Object properties window"""
-    bl_label = "GEN Outlines generator alpha 0.41"
-    bl_idname = "OBJECT_PT_genOutline_0.41"
+    bl_label = "GEN Outlines generator alpha 0.43"
+    bl_idname = "OBJECT_PT_genOutline_0.43"
     #bl_space_type = 'PROPERTIES'
     #bl_region_type = 'WINDOW'
     #bl_context = "modifier"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_context = "objectmode"
-    bl_category = "GENoutlines"
+    bl_category = "GEN Outlines"
     bl_options = {'DEFAULT_CLOSED'} 
 
     C = bpy.context
@@ -232,13 +249,17 @@ class genOutlinesPanel(bpy.types.Panel):
         obj = bpy.context.object
         C = bpy.context
 
-        row = layout.row()
-        row.label(text="Outline Generator")
+        #row = layout.row()
+        #row.label(text="Outline Generator")
 
+        #row = layout.row()
+        #row.label(text="Active object is: " + obj.name)
         row = layout.row()
-        row.label(text="Active object is: " + obj.name)
-        row = layout.row()
-        row.prop(obj, "name")
+        row.prop(obj, "name", text="Active object is:")
+
+        # outline material generator
+        row = layout.row() 
+        row.operator("object.gen_addoutlinemat")
         
         # thickness map generator
         row = layout.row() 
@@ -287,6 +308,11 @@ class genOutlinesPanel(bpy.types.Panel):
         row = layout.row()
         row.prop(C.object.modifiers['InnerLine'], "angle_limit", text="inner lines angle")
 
+        row = layout.row()
+        row.prop(C.object.modifiers['Outline'], "material_offset", text="Outline material offset")
+        row.prop(C.object.modifiers['InnerLine'], "material", text="Inner line material offset")
+        modifiers["InnerLine"].material
+
         # row.prop(C.object.modifiers['Outline'], "vertex_group" )
 
 
@@ -301,6 +327,7 @@ def register():
     bpy.utils.register_class(genNoOutline)
     bpy.utils.register_class(genNoInnerline)
     bpy.utils.register_class(genNormals2Thickness)
+    bpy.utils.register_class(genAddOutlineMaterial)
 
     bpy.utils.register_class(genOutlinesPanel)
 
@@ -310,6 +337,7 @@ def unregister():
     bpy.utils.unregister_class(genNoOutline)
     bpy.utils.unregister_class(genNoInnerline)
     bpy.utils.unregister_class(genNormals2Thickness)
+    bpy.utils.unregister_class(genAddOutlineMaterial)
 
     bpy.utils.unregister_class(genOutlinesPanel)
 
