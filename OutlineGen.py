@@ -33,10 +33,7 @@ bl_info = {
 }
 
 import bpy
-from bpy import context 
-from bpy import types
-from bpy.types import Panel
-from bpy.types import Operator
+
    
 # =================================== OPERATORS =======================
 # ÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷
