@@ -139,7 +139,7 @@ class genNoInnerline(bpy.types.Operator):
     
 # ÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷ set up thickness maps 
 class genNormals2Thickness(bpy.types.Operator):
-    """Generates a vertex weight map based on normals"""
+    """Generates a normals based thickness map to control the stroke thickness variation of the outlines. Select only objects to generate vertical thickness maps, or include ONE light in the selection to make it relative to the light position."""
     bl_idname = "object.gen_normals2thick"
     bl_label = "generate thickness map"
 
@@ -309,8 +309,8 @@ class genOutlinesPanel(bpy.types.Panel):
 
         #row = layout.row()
         #row.label(text="Active object is: " + obj.name)
-        row = layout.row()
-        row.prop(obj, "name", text="Active object is:")
+        ##row = layout.row()
+        ##row.prop(obj, "name", text="Active object is:")
 
         # outline material generator
         row = layout.row() 
@@ -320,6 +320,11 @@ class genOutlinesPanel(bpy.types.Panel):
         row.prop_search(bpy.context.scene, "theChosenObject", bpy.context.scene, "objects")
         
         # thickness map generator
+        ##row = layout.row()
+        ##row.label(text="Variable thickness map generator")
+        ##row = layout.row()
+        ##row.label(text="Generates a thickness map to control the stroke thickness\nvariation of the outlines.\nSelect only objects to generate vertical thickness maps,\nor include ONE light to make it relative to the light position.")
+
         row = layout.row() 
         row.operator("object.gen_normals2thick" , text="1. generate thickness map")
        
@@ -362,14 +367,31 @@ class genOutlinesPanel(bpy.types.Panel):
         
         # --- contrast
         row = layout.row()
-        row.prop(C.object.modifiers['Outline'], "thickness_vertex_group", text="Outline flatness")
+        try:
+            row.prop(C.object.modifiers['Outline'], "thickness_vertex_group", text="Outline flatness")
+        except Exception: 
+            pass
         row = layout.row()
-        row.prop(C.object.modifiers['InnerLine'], "angle_limit", text="inner lines angle")
+        try:
+            row.prop(C.object.modifiers['InnerLine'], "angle_limit", text="inner lines angle")
+        except Exception: 
+            pass
+        # --- offset
+        row = layout.row()
+        try:
+            row.prop(C.object.modifiers['Outline'], "offset", text="Outline offset")
+        except Exception: 
+            pass
 
         row = layout.row()
-        row.prop(C.object.modifiers['Outline'], "material_offset", text="Outline material offset")
-        row.prop(C.object.modifiers['InnerLine'], "material", text="Inner line material offset")
-        modifiers["InnerLine"].material
+        try:
+            row.prop(C.object.modifiers['Outline'], "material_offset", text="Outline material offset")
+        except Exception: 
+            pass
+        try:
+            row.prop(C.object.modifiers['InnerLine'], "material", text="Inner line material offset")
+        except Exception: 
+            pass
 
         # row.prop(C.object.modifiers['Outline'], "vertex_group" )
 
