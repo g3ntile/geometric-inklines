@@ -33,8 +33,9 @@ bl_info = {
 }
 
 import bpy
+import mathutils
+from math import radians
 
-   
 # =================================== OPERATORS =======================
 # ÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷
 # ÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷ ADD OUTLINE OPERATOR 
@@ -145,6 +146,7 @@ class genNormals2Thickness(bpy.types.Operator):
     C = bpy.context
     #obj = bpy.context.active_object
     #ob = obj
+
     
     @classmethod
     def poll(cls, context):
@@ -152,6 +154,48 @@ class genNormals2Thickness(bpy.types.Operator):
     
     def execute(self, context):
         groupName = "__thickness__"
+
+        import mathutils
+        from math import radians
+
+        # Includes light if present 9
+        myLamp = None
+        myLightVector = mathutils.Vector((0,0,65535))
+        if len(bpy.context.selected_objects) > 1 :
+            print ("\n\n+++++++ 2! ")
+            for ob in bpy.context.selected_objects:
+                if ob.type == 'MESH':
+                    # mesh
+                    print ('mesh!')
+                elif ob.type == 'LIGHT':
+                    # light
+                    # Lamp based normals
+                    myLamp = ob
+                    myLightVector = myLamp.location
+                    #myLamp = bpy.data.objects['Lamp']
+
+
+
+        
+
+        # Convierte la rotacion de la lampara en vector
+        # not working yet
+        def myLampToVector(lampObj):
+            return( mathutils.Vector((
+                                    lampObj.rotation_euler[0], 
+                                    lampObj.rotation_euler[1], 
+                                    lampObj.rotation_euler[2]-1)) )
+
+        #   myLightVector = myLampToVector(myLamp)
+
+        #quaternion version
+        ## myLightVector = lampObj.quaternion
+        
+        # for pointlights: location
+        # (works)
+        
+
+        print("lamptovector: ", myLightVector )
 
 
         # check if group exists and create it 
@@ -178,11 +222,21 @@ class genNormals2Thickness(bpy.types.Operator):
         print("==== object: ", mesh.name)
 
         # Get ALL Verts
-        selVerts = [v.index for v in mesh.vertices]
+            # selVerts = [v.index for v in mesh.vertices]
+
+        # Sets weight based on vertex z normal
         myWeights = [ ((-v.normal[2]+1)/2) for v in mesh.vertices] 
 
-        print("verts: " , selVerts)
-        print("znormal: " , myWeights)
+        # Sets weight based on angle with light
+        #myCrossedNormals = [ v.normal.cross(myLightVector) for v in mesh.vertices ]
+        #myWeights = [ ((-v[2]+1)/2) for v in myCrossedNormals] 
+        
+        # Sets weight based on angle with light DOT version
+        myCrossedNormals = [ ((v.normal.dot(myLightVector) * -1+1)/2) for v in mesh.vertices ]
+        myWeights = [ ((v)) for v in myCrossedNormals]
+
+            #print("verts: " , selVerts)
+            #print("znormal: " , myWeights)
 
         # Get the index of the required group
         index = bpy.context.active_object.vertex_groups[groupName].index
@@ -194,12 +248,13 @@ class genNormals2Thickness(bpy.types.Operator):
         #obj.vertex_groups[index].add(selVerts, myWeights, 'REPLACE')
         # obj.vertex_groups[index].add([0], 1, 'REPLACE')  
 
-        for v in selVerts:
+
+        for v in mesh.vertices:
             #print ("i = ", i)
             print ("v = ", v)
-            print ("w = ", myWeights[v]) 
+            print ("w = ", myWeights[v.index]) 
             #obj.vertex_groups[index].add([v], myWeights[v], 'REPLACE')
-            myGroup.add([v], myWeights[v], 'REPLACE')
+            myGroup.add([v.index], myWeights[v.index], 'REPLACE')
         # Update to show results  
         bpy.context.active_object.data.update()  
         return {'FINISHED'}
@@ -260,6 +315,9 @@ class genOutlinesPanel(bpy.types.Panel):
         # outline material generator
         row = layout.row() 
         row.operator("object.gen_addoutlinemat")
+
+        row = layout.row()
+        row.prop_search(bpy.context.scene, "theChosenObject", bpy.context.scene, "objects")
         
         # thickness map generator
         row = layout.row() 
