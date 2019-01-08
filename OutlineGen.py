@@ -276,8 +276,8 @@ class genNormals2Thickness(bpy.types.Operator):
 
 
                 # Restore rotation
-                bpy.context.active_object.rotation_quaternion = rotationBackup
                 bpy.context.active_object.rotation_mode = 'QUATERNION'
+                bpy.context.active_object.rotation_quaternion = rotationBackup
                 bpy.context.active_object.rotation_mode = rotModeBKP_ob
                 myLamp.rotation_mode = rotModeBKP_li
 
