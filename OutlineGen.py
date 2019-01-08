@@ -189,9 +189,10 @@ class genNormals2Thickness(bpy.types.Operator):
         # not working yet
         def myLampToVector(lampObj):
             return( mathutils.Vector((
-                                    lampObj.rotation_euler[0], 
-                                    lampObj.rotation_euler[1], 
-                                    lampObj.rotation_euler[2])) )
+                                    lampObj.rotation_quaternion[0], 
+                                    -lampObj.rotation_quaternion[1], 
+                                    -lampObj.rotation_quaternion[2],
+                                    -lampObj.rotation_quaternion[3])) )
 
         
         #   myLightVector = myLampToVector(myLamp)
@@ -246,12 +247,18 @@ class genNormals2Thickness(bpy.types.Operator):
                 print('\n Sun!')
                 # FOR SUN LIGHTS
                 # ROTATE OBJ OPPOSITE TO LIGHT
-                rotationBackup = ((
-                                    bpy.context.active_object.rotation_euler[0] , 
-                                    bpy.context.active_object.rotation_euler[1] , 
-                                    bpy.context.active_object.rotation_euler[2] ))
+                rotModeBKP_ob = bpy.context.active_object.rotation_mode
+                rotModeBKP_li = myLamp.rotation_mode
 
-                bpy.context.active_object.rotation_euler = myLampToVector(myLamp)
+                myLamp.rotation_mode = 'QUATERNION'
+                bpy.context.active_object.rotation_mode = 'QUATERNION'
+                rotationBackup = ((
+                                    bpy.context.active_object.rotation_quaternion[0] , 
+                                    bpy.context.active_object.rotation_quaternion[1] , 
+                                    bpy.context.active_object.rotation_quaternion[2] ,
+                                    bpy.context.active_object.rotation_quaternion[3]))
+
+                bpy.context.active_object.rotation_quaternion =  myLampToVector(myLamp)
 
 
                 ########. vertex normals according to world::
@@ -261,12 +268,17 @@ class genNormals2Thickness(bpy.types.Operator):
                 # normal_local = (C.object.matrix_world * normal_local).to_3d()
 
                 # If you know they are all the same, you can use :
+                bpy.context.active_object.rotation_mode = 'XYZ'
                 myCrossedNormals = [ bpy.context.active_object.rotation_euler.to_matrix() @ v.normal for v in mesh.vertices  ]
                 print( "\n\nto matrix: " , myCrossedNormals)
-                myWeights = [ ((v[2]+1)/2 ) for v in myCrossedNormals ]
+                myWeights = [ ((-v[2]+1)/2 ) for v in myCrossedNormals ]
+
 
                 # Restore rotation
-                # bpy.context.active_object.rotation_euler = rotationBackup
+                bpy.context.active_object.rotation_quaternion = rotationBackup
+                bpy.context.active_object.rotation_mode = 'QUATERNION'
+                bpy.context.active_object.rotation_mode = rotModeBKP_ob
+                myLamp.rotation_mode = rotModeBKP_li
 
         else: 
             # Sets weight based on vertex z normal
