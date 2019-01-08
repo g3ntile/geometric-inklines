@@ -17,14 +17,15 @@
 # ##### END GPL LICENSE BLOCK #####
 
 # Geometric Outlines Generator (W.I.P.)
-# alpha 0.42
+# alpha 0.44
 # Pablo Gentile 1/2019
+# https://github.com/g3ntile/geometric-inklines
 
 bl_info = {
     "name": "GENerate OUTlines",
     "category": "Object",
     "author": "Pablo Gentile",
-    "version": (0, 0, 43),
+    "version": (0, 0, 44),
     "blender": (2, 80, 0),
     "location": "View3D > Tool Shelf",
     "description": "Adds and administrates a combo of modifiers, vertex groups and materialas (TO DO) to generate geometric inverted hull outlines to objects that work in realtime",
