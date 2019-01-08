@@ -160,6 +160,7 @@ class genNormals2Thickness(bpy.types.Operator):
 
         # Includes light if present 9
         myLamp = None
+        hasLight = False
         myLightVector = mathutils.Vector((0,0,65535))
         if len(bpy.context.selected_objects) > 1 :
             print ("\n\n+++++++ 2! ")
@@ -171,7 +172,13 @@ class genNormals2Thickness(bpy.types.Operator):
                     # light
                     # Lamp based normals
                     myLamp = ob
-                    myLightVector = myLamp.location
+                    hasLight = True
+                    if ob.data.type == 'SUN':
+                        myLightVector = myLamp.rotation_euler
+                        myLightIsSun = True
+                    else:
+                        myLightVector = myLamp.location
+                        myLightIsSun = False
                     #myLamp = bpy.data.objects['Lamp']
 
 
@@ -184,8 +191,9 @@ class genNormals2Thickness(bpy.types.Operator):
             return( mathutils.Vector((
                                     lampObj.rotation_euler[0], 
                                     lampObj.rotation_euler[1], 
-                                    lampObj.rotation_euler[2]-1)) )
+                                    lampObj.rotation_euler[2])) )
 
+        
         #   myLightVector = myLampToVector(myLamp)
 
         #quaternion version
@@ -207,15 +215,17 @@ class genNormals2Thickness(bpy.types.Operator):
             myGroup = bpy.context.active_object.vertex_groups.new(name=groupName)
         
 
-        # Make sure you're in edit mode
-        bpy.ops.object.mode_set(mode='EDIT')
+        # 
         
-         # Select all verts
-        bpy.ops.mesh.select_all(action='DESELECT')
+        # Make sure you're in edit mode
+        # bpy.ops.object.mode_set(mode='EDIT')
+        
+        # Select all verts
+        # bpy.ops.mesh.select_all(action='DESELECT')
         
 
         # Deselect all verts
-        bpy.ops.mesh.select_all(action='DESELECT')
+        # bpy.ops.mesh.select_all(action='DESELECT')
 
         # Store the mesh
         mesh = bpy.context.active_object.data
@@ -224,16 +234,51 @@ class genNormals2Thickness(bpy.types.Operator):
         # Get ALL Verts
             # selVerts = [v.index for v in mesh.vertices]
 
-        # Sets weight based on vertex z normal
-        myWeights = [ ((-v.normal[2]+1)/2) for v in mesh.vertices] 
+        if hasLight:
+        
+            if not myLightIsSun:
+                print('\n Point!')
+                #POINT lights, spot, area
+                # Sets weight based on angle with light DOT version
+                myCrossedNormals = [ ((v.normal.dot(myLightVector) * -1+1)/2) for v in mesh.vertices ]
+                myWeights = [ ((v)) for v in myCrossedNormals]
+            else: 
+                print('\n Sun!')
+                # FOR SUN LIGHTS
+                # ROTATE OBJ OPPOSITE TO LIGHT
+                rotationBackup = ((
+                                    bpy.context.active_object.rotation_euler[0] , 
+                                    bpy.context.active_object.rotation_euler[1] , 
+                                    bpy.context.active_object.rotation_euler[2] ))
+
+                bpy.context.active_object.rotation_euler = myLampToVector(myLamp)
+
+
+                ########. vertex normals according to world::
+                #Actually it is, when the scaling factors are not the same (as @mifth pointed out) :
+                # normal_local = C.object.data.vertices[0].normal.to_4d()
+                # normal_local.w = 0
+                # normal_local = (C.object.matrix_world * normal_local).to_3d()
+
+                # If you know they are all the same, you can use :
+                myCrossedNormals = [ bpy.context.active_object.rotation_euler.to_matrix() @ v.normal for v in mesh.vertices  ]
+                print( "\n\nto matrix: " , myCrossedNormals)
+                myWeights = [ ((v[2]+1)/2 ) for v in myCrossedNormals ]
+
+                # Restore rotation
+                # bpy.context.active_object.rotation_euler = rotationBackup
+
+        else: 
+            # Sets weight based on vertex z normal
+            print('\n No light!')
+            myWeights = [ ((-v.normal[2]+1)/2) for v in mesh.vertices] 
 
         # Sets weight based on angle with light
         #myCrossedNormals = [ v.normal.cross(myLightVector) for v in mesh.vertices ]
         #myWeights = [ ((-v[2]+1)/2) for v in myCrossedNormals] 
         
-        # Sets weight based on angle with light DOT version
-        myCrossedNormals = [ ((v.normal.dot(myLightVector) * -1+1)/2) for v in mesh.vertices ]
-        myWeights = [ ((v)) for v in myCrossedNormals]
+
+        
 
             #print("verts: " , selVerts)
             #print("znormal: " , myWeights)
