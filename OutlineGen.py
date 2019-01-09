@@ -285,6 +285,7 @@ class genNormals2Thickness(bpy.types.Operator):
         bpy.context.active_object.data.update()  
         return {'FINISHED'}
 
+# Materials creator
 class genAddOutlineMaterial(bpy.types.Operator):
     """Adds a Material to make outlines"""
     bl_idname = "object.geoink_addoutlinemat"
@@ -300,7 +301,34 @@ class genAddOutlineMaterial(bpy.types.Operator):
     
     def execute(self, context):
         print('TO DO. Just a placeholder')
+
+        ob = bpy.context.active_object
+
+        # Get material
+        mat = bpy.data.materials.get("outline")
+        if mat is None:
+            # create material
+            mat = bpy.data.materials.new(name="outline")
+            mat.use_nodes = True
+
+        # Assign it to object
+        if ob.data.materials:
+            # assign to 1st material slot
+            ob.data.materials[len(ob.data.materials)] = mat
+        else:
+            # no slots
+            # dummy main material:
+            dummyMat = bpy.data.materials.new(name="Material")
+            ob.data.materials.append(dummyMat)
+            dummyMat.use_nodes = True
+            ob.data.materials.append(mat)
+
+            #
+
+
         return {'FINISHED'}
+
+
 
 
     ######################################
