@@ -305,26 +305,95 @@ class genAddOutlineMaterial(bpy.types.Operator):
         ob = bpy.context.active_object
 
         # Get material
-        mat = bpy.data.materials.get("outline")
-        if mat is None:
-            # create material
-            mat = bpy.data.materials.new(name="outline")
-            mat.use_nodes = True
+        outMat = bpy.data.materials.get("outline")
+        if outMat is None:
+            # create  outline material
+            outMat = bpy.data.materials.new(name="outline")
+            outMat.use_nodes = True
+            # enable transparency
+            outMat.blend_method = 'BLEND'
+            # set vewport color
+            outMat.diffuse_color = (0,0,0)
+            # get the nodes
+            nodes = outMat.node_tree.nodes
+            print("\n\n === " , nodes)
+
+            #start clean
+            for node in nodes:
+                nodes.remove(node)
+
+            # create output node
+            node_output = nodes.new(type='ShaderNodeOutputMaterial')   
+            node_output.location = 400,0
+
+            # create Mix node 1
+            node_mix_1 = nodes.new(type='ShaderNodeMixShader')   
+            node_mix_1.location = 0,0
+
+            # create Mix node 2
+            node_mix_2 = nodes.new(type='ShaderNodeMixShader')   
+            node_mix_2.location = -200,50
+
+            # create emission node
+            node_emission = nodes.new(type='ShaderNodeEmission')
+            node_emission.inputs[0].default_value = (0,0,0,1)  # black RGBA
+            node_emission.inputs[1].default_value = 1.0 # strength
+            node_emission.location = -400,200
+
+            # create Geometry node
+            node_geometry = nodes.new(type='ShaderNodeNewGeometry')   
+            node_geometry.location = -400,0
+
+            # create Transparent node
+            node_transparent = nodes.new(type='ShaderNodeBsdfTransparent')   
+            node_transparent.location = -400,-200
+
+            # create LightPath node
+            node_lightpath = nodes.new(type='ShaderNodeLightPath')   
+            node_lightpath.location = -400,-400
+
+
+
+
+            # link nodes
+            links = outMat.node_tree.links
+            # MIX 1 -> OUTPUT
+            link = links.new(node_mix_1.outputs[0], node_output.inputs[0])
+            # MIX 2 -> MIX 1
+            link = links.new(node_mix_2.outputs[0], node_mix_1.inputs[1])
+            # EMISSION -> MIX 2
+            link = links.new(node_emission.outputs[0], node_mix_2.inputs[1])
+            # GEOMETRY -> MIX 2
+            link = links.new(node_geometry.outputs[6], node_mix_2.inputs[0])
+            # TRANSPARENT -> MIX 2
+            link = links.new(node_transparent.outputs[0], node_mix_2.inputs[2])
+            # TRANSPARENT -> MIX 1
+            link = links.new(node_transparent.outputs[0], node_mix_1.inputs[1])
+            # LIGHT PATH -> MIX 1
+            link = links.new(node_lightpath.outputs[0], node_mix_1.inputs[0])
+            # MIX 1 -> MIX 2
+            link = links.new(node_mix_2.outputs[0], node_mix_1.inputs[2])
+
+
+
+            
 
         # Assign it to object
         if ob.data.materials:
             # assign to 1st material slot
-            ob.data.materials[len(ob.data.materials)] = mat
+            ob.data.materials.append(outMat)
         else:
             # no slots
             # dummy main material:
             dummyMat = bpy.data.materials.new(name="Material")
             ob.data.materials.append(dummyMat)
             dummyMat.use_nodes = True
-            ob.data.materials.append(mat)
+            ob.data.materials.append(outMat)
 
             #
 
+        # SETS BACKFACE CULLING
+        # bpy.data.screens["Layout"].shading.show_backface_culling = True
 
         return {'FINISHED'}
 
