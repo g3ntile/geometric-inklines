@@ -29,7 +29,7 @@ bl_info = {
     "blender": (2, 80, 0),
     "location": "View3D > Tool Shelf",
     "description": "Adds and administrates a combo of modifiers, vertex groups and materialas (TO DO) to generate geometric inverted hull outlines to objects that work in realtime",
-    "warning": "",
+    "warning": "Still very alpha. Handle with care.",
     "wiki_url": "https://github.com/g3ntile/geometric-inklines/wiki",
     "tracker_url": "https://github.com/g3ntile/geometric-inklines" ,
 }
@@ -44,7 +44,7 @@ from math import radians
 
 class genOutline(bpy.types.Operator):
     """Adds a Solidify modifier for making inverted hull outlines"""
-    bl_idname = "object.gen_outline"
+    bl_idname = "object.geoink_outline"
     bl_label = "add Outline"
 
     C = bpy.context
@@ -72,7 +72,7 @@ class genOutline(bpy.types.Operator):
 # ÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷  Remove Outline Operator
 class genNoOutline(bpy.types.Operator):
     """Removes the inverted hull Outlines"""
-    bl_idname = "object.gen_no_outline"
+    bl_idname = "object.geoink_no_outline"
     bl_label = "remove Outline"
 
     C = bpy.context
@@ -95,7 +95,7 @@ class genNoOutline(bpy.types.Operator):
 
 class genInnerline(bpy.types.Operator):
     """Adds a Bevel modifier for making geometric inner lines"""
-    bl_idname = "object.gen_innerline"
+    bl_idname = "object.geoink_innerline"
     bl_label = "add inner lines"
 
     C = bpy.context
@@ -121,7 +121,7 @@ class genInnerline(bpy.types.Operator):
 # ÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷ Remove Inner line Operator
 class genNoInnerline(bpy.types.Operator):
     """Removes the beveled innerlines"""
-    bl_idname = "object.gen_no_innerline"
+    bl_idname = "object.geoink_no_innerline"
     bl_label = "remove innerline"
 
     C = bpy.context
@@ -142,7 +142,7 @@ class genNoInnerline(bpy.types.Operator):
 # ÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷ set up thickness maps 
 class genNormals2Thickness(bpy.types.Operator):
     """Generates a normals based thickness map to control the stroke thickness variation of the outlines. Select only objects to generate vertical thickness maps, or include ONE light in the selection to make it relative to the light position."""
-    bl_idname = "object.gen_normals2thick"
+    bl_idname = "object.geoink_normals2thick"
     bl_label = "generate thickness map"
 
     C = bpy.context
@@ -196,19 +196,6 @@ class genNormals2Thickness(bpy.types.Operator):
                                     -lampObj.rotation_quaternion[2],
                                     -lampObj.rotation_quaternion[3])) )
 
-        
-        #   myLightVector = myLampToVector(myLamp)
-
-        #quaternion version
-        ## myLightVector = lampObj.quaternion
-        
-        # for pointlights: location
-        # (works)
-        
-
-        print("lamptovector: ", myLightVector )
-
-
         # check if group exists and create it 
         if "__thickness__" in bpy.context.active_object.vertex_groups:
             print("yes! exists")
@@ -217,18 +204,6 @@ class genNormals2Thickness(bpy.types.Operator):
             print("nope :-( it doesn't" )
             myGroup = bpy.context.active_object.vertex_groups.new(name=groupName)
         
-
-        # 
-        
-        # Make sure you're in edit mode
-        # bpy.ops.object.mode_set(mode='EDIT')
-        
-        # Select all verts
-        # bpy.ops.mesh.select_all(action='DESELECT')
-        
-
-        # Deselect all verts
-        # bpy.ops.mesh.select_all(action='DESELECT')
 
         # Store the mesh
         mesh = bpy.context.active_object.data
@@ -282,20 +257,16 @@ class genNormals2Thickness(bpy.types.Operator):
                 bpy.context.active_object.rotation_mode = rotModeBKP_ob
                 myLamp.rotation_mode = rotModeBKP_li
 
+                # Assign the map to the Outline if it exists
+                try:
+                    bpy.context.active_object.modifiers["Outline"].vertex_group = "__thickness__"
+                except:
+                    pass
+
         else: 
             # Sets weight based on vertex z normal
             print('\n No light!')
             myWeights = [ ((-v.normal[2]+1)/2) for v in mesh.vertices] 
-
-        # Sets weight based on angle with light
-        #myCrossedNormals = [ v.normal.cross(myLightVector) for v in mesh.vertices ]
-        #myWeights = [ ((-v[2]+1)/2) for v in myCrossedNormals] 
-        
-
-        
-
-            #print("verts: " , selVerts)
-            #print("znormal: " , myWeights)
 
         # Get the index of the required group
         index = bpy.context.active_object.vertex_groups[groupName].index
@@ -303,11 +274,7 @@ class genNormals2Thickness(bpy.types.Operator):
         # Exit Edit mode or fails
         bpy.ops.object.mode_set(mode='OBJECT')
 
-        ## WORKS! ###
-        #obj.vertex_groups[index].add(selVerts, myWeights, 'REPLACE')
-        # obj.vertex_groups[index].add([0], 1, 'REPLACE')  
-
-
+        # Sets the calculated weights to each vertex in the mesh
         for v in mesh.vertices:
             #print ("i = ", i)
             print ("v = ", v)
@@ -320,7 +287,7 @@ class genNormals2Thickness(bpy.types.Operator):
 
 class genAddOutlineMaterial(bpy.types.Operator):
     """Adds a Material to make outlines"""
-    bl_idname = "object.gen_addoutlinemat"
+    bl_idname = "object.geoink_addoutlinemat"
     bl_label = "add outlines materials"
 
     C = bpy.context
@@ -340,7 +307,7 @@ class genAddOutlineMaterial(bpy.types.Operator):
     ################# PANEL
     
 class genOutlinesPanel(bpy.types.Panel):
-    """Creates a Panel in the Object properties window"""
+    """Creates a Panel in the N Panel"""
     bl_label = "GEO INKlines alpha 0.45"
     bl_idname = "OBJECT_PT_GEOINKlines"
     #bl_space_type = 'PROPERTIES'
@@ -364,16 +331,11 @@ class genOutlinesPanel(bpy.types.Panel):
         C = bpy.context
 
         row = layout.row()
-        #row.label(text="https://github.com/g3ntile/geometric-inklines")
-
-        #row = layout.row()
-        #row.label(text="Active object is: " + obj.name)
-        ##row = layout.row()
-        ##row.prop(obj, "name", text="Active object is:")
+        row.label(text="https://github.com/g3ntile/geometric-inklines")
 
         # outline material generator
         row = layout.row() 
-        row.operator("object.gen_addoutlinemat")
+        row.operator("object.geoink_addoutlinemat")
 
         row = layout.row()
         row.prop_search(bpy.context.scene, "theChosenObject", bpy.context.scene, "objects")
@@ -381,23 +343,23 @@ class genOutlinesPanel(bpy.types.Panel):
         # thickness map generator
         ##row = layout.row()
         ##row.label(text="Variable thickness map generator")
-        ##row = layout.row()
-        ##row.label(text="Generates a thickness map to control the stroke thickness\nvariation of the outlines.\nSelect only objects to generate vertical thickness maps,\nor include ONE light to make it relative to the light position.")
+        row = layout.row()
+        # row.label(text="Generates a thickness map to control the stroke thickness\nvariation of the outlines.\nSelect only objects to generate vertical thickness maps,\nor include ONE light to make it relative to the light position.")
 
         row = layout.row() 
-        row.operator("object.gen_normals2thick" , text="1. generate thickness map")
+        row.operator("object.geoink_normals2thick" , text="1. generate thickness map")
        
         # add Buttons
         row = layout.row()
         # if not (C.object.modifiers['Outline']):
         
         # check if theres already an Outline
-        myOperator = "object.gen_outline"
+        myOperator = "object.geoink_outline"
         myLabel = "2. add Outline"
         hasOutline = False
         for modifier in C.object.modifiers:
             if modifier.name == "Outline":
-                myOperator = "object.gen_no_outline"
+                myOperator = "object.geoink_no_outline"
                 myLabel = "remove Outline"
                 hasOutline = True
                 
@@ -405,13 +367,13 @@ class genOutlinesPanel(bpy.types.Panel):
             
             
         # check if theres already an innerLine
-        myOperator = "object.gen_innerline"
+        myOperator = "object.geoink_innerline"
         myLabel = "3. add Inner Line"
         hasInline = False
         for modifier in C.object.modifiers:
             if modifier.name == "InnerLine":
                 hasInline = True
-                myOperator = "object.gen_no_innerline"
+                myOperator = "object.geoink_no_innerline"
                 myLabel = "remove Inner Line"
         
         row.operator(myOperator, text = myLabel)
