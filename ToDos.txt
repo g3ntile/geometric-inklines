@@ -1,0 +1,34 @@
+GENOUT
+
+GeoInklines:
+
+when generating thickness map, check if Outline exists to assign
+
+
+new tool:
+Zero location one axis
+
+
+
+
+***
+
+Geometric Inklines addon:
+Polishing before releasing. Still a few features missing, but most of it works ok (and the code is a mess too ;-)  ).
+What do you think of the naming?
+
+By now you can:
++ Generate automatic geometric inklines based in the Inverted Hull method using a pre-tuned Solidify modifier.
++ Generate bevel based inner lines (modifier too). Good for hardsurfaces mostly.
++ Generate an automatic vertex weight map to modulate the Outline thickness based on the vertex normals, by either:
+  • Selecting just one object: the map is generated based on the vertical normal alone, thinner above, thicker below
+  • Selecting one Sun Light and then an object after: the map is generated based on the light angle.
+  • Selecting any other kind of light and then an object after: the map is generated using the relative position between object and light (thanks to Vitor Balbio for the math).
++ Adjust all these settings using a centralized panel.
+
+The Outlines work even on beveled curves (thanks to the bugfix by Bastien Montagne). But these (alas!) aren't compatible with variable thickness yet due to a limitation of Blender.
+
+There are a few caveats, i'll try to resolve all I can before releasing. 
+I'll set up a Github so everyone inspired can contribute.
+
+Thanks all for your feedback!

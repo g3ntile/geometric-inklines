@@ -22,15 +22,16 @@
 # https://github.com/g3ntile/geometric-inklines
 
 bl_info = {
-    "name": "GENerate OUTlines",
+    "name": "GEO INKlines",
     "category": "Object",
     "author": "Pablo Gentile",
-    "version": (0, 0, 44),
+    "version": (0, 0, 45),
     "blender": (2, 80, 0),
     "location": "View3D > Tool Shelf",
     "description": "Adds and administrates a combo of modifiers, vertex groups and materialas (TO DO) to generate geometric inverted hull outlines to objects that work in realtime",
     "warning": "",
-    "wiki_url": "",
+    "wiki_url": "https://github.com/g3ntile/geometric-inklines/wiki",
+    "tracker_url": "https://github.com/g3ntile/geometric-inklines" ,
 }
 
 import bpy
@@ -340,15 +341,15 @@ class genAddOutlineMaterial(bpy.types.Operator):
     
 class genOutlinesPanel(bpy.types.Panel):
     """Creates a Panel in the Object properties window"""
-    bl_label = "GEN Outlines generator alpha 0.43"
-    bl_idname = "OBJECT_PT_genOutline_0.43"
+    bl_label = "GEO INKlines alpha 0.45"
+    bl_idname = "OBJECT_PT_GEOINKlines"
     #bl_space_type = 'PROPERTIES'
     #bl_region_type = 'WINDOW'
     #bl_context = "modifier"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_context = "objectmode"
-    bl_category = "GEN Outlines"
+    bl_category = "GEO Inklines"
     bl_options = {'DEFAULT_CLOSED'} 
 
     C = bpy.context
@@ -362,8 +363,8 @@ class genOutlinesPanel(bpy.types.Panel):
         obj = bpy.context.object
         C = bpy.context
 
-        #row = layout.row()
-        #row.label(text="Outline Generator")
+        row = layout.row()
+        #row.label(text="https://github.com/g3ntile/geometric-inklines")
 
         #row = layout.row()
         #row.label(text="Active object is: " + obj.name)
