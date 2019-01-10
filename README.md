@@ -23,16 +23,19 @@ Generates the minimum needed materials for lines to work (one main material and 
 * If the object already has a material named outlines somwhere in the stack, it adds another anyway at the end. You may want to have many outline mats to modify later. You can assign different outline materials to different parts, relative to each material, and for the outer and inner lines. (<<-- to do: make a tutorial explaining that)
 
 ### Generate thickness map
-1. Select just the object and press GENERATE THICKNESS: 
-	the thickness will be distributed with the thicker width below and the thinner above, according to world normal, before Armatures and modifiers.
-2. Select a reference light, and then your object: The thickness will be distributed relative to the light (according to angle for Sun lights, and position for all else). Right now you must select just ONE light and ONE object. I plan to modify that to assign maps to many objects at once,.
+* Right now you have two ways of using this effect
+	1. Select just the object and press GENERATE THICKNESS: 
+		the thickness will be distributed with the thicker width below and the thinner above, according to world normal, before Armatures and modifiers.
+	2. Select a reference light, and then your object: The thickness will be distributed relative to the light (according to angle for Sun lights, and position for all else). 
+Right now you should select ONE light and ONE object, last (active object). The map will be applied to the active object based on ONE of the selected lights. I plan to modify that to assign maps to many objects at once,.
 ~**BUG ALERT:** right now the thickness generator doesn't take the object rotation into account for Sun lights. I'm working on that.~ fixed!
-
+* The map generated is completely editable by hand. It's a vertex weight map named "\__thickness\__" (hardcoded in this version)
 
 ### Add outline
-Adds the Solidify modifier
-(...)
+Adds the Outlines (Solidify modifier). You can adjust it's settings below once applied. The name is hardcoded to "Outline", this name may be editable in future versions. If a Solidify modifier with that name is already present the button will remove the effect instead.
+The default material offset is set to 16534, so it will be virtually the last material in the stack. You can modify this to achieve interesting effects (i.e you can have a different outline material for each main material, one after the other, that way you can have differently colored outlines for each mat –a.k.a. disney style–)
 
 ### Add inner line
-Adds the bevel
-(...)
+Adds the Inner lines (Bevel modifier). This works better with hard surfaces with sharp edges. For most models the Inner lines Bevel modifier should be AFTER the Outlines in the stack , to avoid some weird artifacts.
+The default material offset in this case is 1, to achieve the effect mentioned in Add outline.
+
