@@ -209,14 +209,12 @@ class genNormals2Thickness(bpy.types.Operator):
         mesh = bpy.context.active_object.data
         print("==== object: ", mesh.name)
 
-        # backup rotation modes
+        # backup rotation mode OBJECT
         rotModeBKP_ob = bpy.context.active_object.rotation_mode
-        rotModeBKP_li = myLamp.rotation_mode
-
-        # Get ALL Verts
-            # selVerts = [v.index for v in mesh.vertices]
 
         if hasLight:
+            # backup rotation mode LIGHT
+            rotModeBKP_li = myLamp.rotation_mode
         
             if not myLightIsSun:
                 print('\n\n\n Point!')
@@ -265,10 +263,11 @@ class genNormals2Thickness(bpy.types.Operator):
                 bpy.context.active_object.rotation_mode = 'QUATERNION'
                 bpy.context.active_object.rotation_quaternion = rotationBackup
                 bpy.context.active_object.rotation_mode = rotModeBKP_ob
-                myLamp.rotation_mode = rotModeBKP_li
-
                 
 
+                
+            #restore rotation mode LIGHT
+            myLamp.rotation_mode = rotModeBKP_li
         else: 
             
             print('\n\n\n No light!')
@@ -283,7 +282,7 @@ class genNormals2Thickness(bpy.types.Operator):
         
         # restore rotations
         bpy.context.active_object.rotation_mode = rotModeBKP_ob
-        myLamp.rotation_mode = rotModeBKP_li 
+        ### myLamp.rotation_mode = rotModeBKP_li 
         
         # Get the index of the required group
         index = bpy.context.active_object.vertex_groups[groupName].index
