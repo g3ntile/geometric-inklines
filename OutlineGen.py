@@ -25,7 +25,7 @@ bl_info = {
     "name": "GEO INKlines",
     "category": "Object",
     "author": "Pablo Gentile",
-    "version": (0, 0, 45),
+    "version": (0, 0, 46),
     "blender": (2, 80, 0),
     "location": "View3D > Tool Shelf",
     "description": "Adds and administrates a combo of modifiers, vertex groups and materialas (TO DO) to generate geometric inverted hull outlines to objects that work in realtime",
@@ -240,13 +240,15 @@ class genNormals2Thickness(bpy.types.Operator):
 
                 ########. vertex normals according to world::
                 #Actually it is, when the scaling factors are not the same (as @mifth pointed out) :
-                # normal_local = C.object.data.vertices[0].normal.to_4d()
-                # normal_local.w = 0
-                # normal_local = (C.object.matrix_world * normal_local).to_3d()
+                # for v in bpy.context.active_object.data.vertices:
+                #     myCrossedNormals[v] = v.normal.to_4d()
+                #     myCrossedNormals[v].w = 0
+                #     myCrossedNormals[v] = (bpy.context.active_object.matrix_world @ myCrossedNormals).to_3d()
 
                 # If you know they are all the same, you can use :
                 bpy.context.active_object.rotation_mode = 'XYZ'
                 myCrossedNormals = [ bpy.context.active_object.rotation_euler.to_matrix() @ v.normal for v in mesh.vertices  ]
+                
                 print( "\n\nto matrix: " , myCrossedNormals)
                 myWeights = [ ((-v[2]+1)/2 ) for v in myCrossedNormals ]
 
@@ -257,16 +259,17 @@ class genNormals2Thickness(bpy.types.Operator):
                 bpy.context.active_object.rotation_mode = rotModeBKP_ob
                 myLamp.rotation_mode = rotModeBKP_li
 
-                # Assign the map to the Outline if it exists
-                try:
-                    bpy.context.active_object.modifiers["Outline"].vertex_group = "__thickness__"
-                except:
-                    pass
+                
 
         else: 
-            # Sets weight based on vertex z normal
+            
             print('\n No light!')
-            myWeights = [ ((-v.normal[2]+1)/2) for v in mesh.vertices] 
+            # take rotation into account:
+            bpy.context.active_object.rotation_mode = 'XYZ'
+            myCrossedNormals = [ bpy.context.active_object.rotation_euler.to_matrix() @ v.normal for v in mesh.vertices  ]
+            # Sets weight based on vertex z normal
+            myWeights = [ ((-v[2]+1)/2) for v in myCrossedNormals] 
+            #myWeights = [ ((-v.normal[2]+1)/2) for v in mesh.vertices] 
 
         # Get the index of the required group
         index = bpy.context.active_object.vertex_groups[groupName].index
@@ -281,6 +284,12 @@ class genNormals2Thickness(bpy.types.Operator):
             print ("w = ", myWeights[v.index]) 
             #obj.vertex_groups[index].add([v], myWeights[v], 'REPLACE')
             myGroup.add([v.index], myWeights[v.index], 'REPLACE')
+
+        # Assign the map to the Outline if it exists
+        try:
+            bpy.context.active_object.modifiers["Outline"].vertex_group = "__thickness__"
+        except:
+            pass
         # Update to show results  
         bpy.context.active_object.data.update()  
         return {'FINISHED'}
@@ -337,20 +346,20 @@ class genAddOutlineMaterial(bpy.types.Operator):
             # create emission node
             node_emission = nodes.new(type='ShaderNodeEmission')
             node_emission.inputs[0].default_value = (0,0,0,1)  # black RGBA
-            node_emission.inputs[1].default_value = 1.0 # strength
-            node_emission.location = -400,200
+            node_emission.inputs[1].default_value = 0 # strength
+            node_emission.location = -400,220
 
             # create Geometry node
             node_geometry = nodes.new(type='ShaderNodeNewGeometry')   
-            node_geometry.location = -400,0
+            node_geometry.location = -400,110
 
             # create Transparent node
             node_transparent = nodes.new(type='ShaderNodeBsdfTransparent')   
-            node_transparent.location = -400,-200
+            node_transparent.location = -400,-420
 
             # create LightPath node
             node_lightpath = nodes.new(type='ShaderNodeLightPath')   
-            node_lightpath.location = -400,-400
+            node_lightpath.location = -400,-110
 
 
 
@@ -405,7 +414,7 @@ class genAddOutlineMaterial(bpy.types.Operator):
     
 class genOutlinesPanel(bpy.types.Panel):
     """Creates a Panel in the N Panel"""
-    bl_label = "GEO INKlines alpha 0.45"
+    bl_label = "GEO INKlines alpha 0.46"
     bl_idname = "OBJECT_PT_GEOINKlines"
     #bl_space_type = 'PROPERTIES'
     #bl_region_type = 'WINDOW'
