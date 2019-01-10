@@ -22,7 +22,7 @@ When you select a fresh object, this addon offers you button to stramline each o
 1. Select just the object and press GENERATE THICKNESS: 
 	the thickness will be distributed with the thicker width below and the thinner above, according to world normal, before Armatures and modifiers.
 2. Select a reference light, and then your object: The thickness will be distributed relative to the light (according to angle for Sun lights, and position for all else)
-**BUG ALERT:** right now the thickness generator doesn't take the object rotation into account for Sun lights. I'm working on that.
+~**BUG ALERT:** right now the thickness generator doesn't take the object rotation into account for Sun lights. I'm working on that.~ fixed!
 
 ### Add outline
 Adds the Solidify modifier
