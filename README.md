@@ -17,6 +17,10 @@ When you select a fresh object, this addon offers you button to stramline each o
 **Keep in mind that in order to correctly view the outlines in the viewport you have to enable Backface culling under Shading. When I learn how to enable it with python it will be done automatically when you add an Outline**
 
 ### Add outlines materials
+Generates the minimum needed materials for lines to work (one main material and one outlines material).
+* If the object has at least one material assigned, it creates the outline material and places it in the last material slot.
+* If a material named "outlines" already exists in the Blender file, it adds it to material slot at the of the stack.
+* If the object already has a material named outlines somwhere in the stack, it adds another anyway at the end. You may want to have many outline mats to modify later. You can assign different outline materials to different parts, relative to each material, and for the outer and inner lines. (<<-- to do: make a tutorial explaining that)
 
 ### Generate thickness map
 1. Select just the object and press GENERATE THICKNESS: 
