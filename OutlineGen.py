@@ -25,7 +25,7 @@ bl_info = {
     "name": "GEO INKlines",
     "category": "Object",
     "author": "Pablo Gentile",
-    "version": (0, 0, 46),
+    "version": (0, 0, 47),
     "blender": (2, 80, 0),
     "location": "View3D > Tool Shelf",
     "description": "Adds and administrates a combo of modifiers, vertex groups and materialas (TO DO) to generate geometric inverted hull outlines to objects that work in realtime",
@@ -241,7 +241,7 @@ class genNormals2Thickness(bpy.types.Operator):
                                     bpy.context.active_object.rotation_quaternion[2] ,
                                     bpy.context.active_object.rotation_quaternion[3]))
 
-                bpy.context.active_object.rotation_quaternion =  myLampToVector(myLamp)
+                bpy.context.active_object.rotation_quaternion @=  myLampToVector(myLamp)
 
 
                 ########. vertex normals according to world::
@@ -427,7 +427,7 @@ class genAddOutlineMaterial(bpy.types.Operator):
     
 class genOutlinesPanel(bpy.types.Panel):
     """Creates a Panel in the N Panel"""
-    bl_label = "GEO INKlines alpha 0.46"
+    bl_label = "GEO INKlines alpha 0.47"
     bl_idname = "OBJECT_PT_GEOINKlines"
     #bl_space_type = 'PROPERTIES'
     #bl_region_type = 'WINDOW'
