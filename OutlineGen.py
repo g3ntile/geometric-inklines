@@ -190,7 +190,7 @@ class genNormals2Thickness(bpy.types.Operator):
         # Convierte la rotacion de la lampara en vector
         # not working yet
         def myLampToVector(lampObj):
-            return( mathutils.Vector((
+            return( mathutils.Quaternion((
                                     lampObj.rotation_quaternion[0], 
                                     -lampObj.rotation_quaternion[1], 
                                     -lampObj.rotation_quaternion[2],
@@ -241,7 +241,7 @@ class genNormals2Thickness(bpy.types.Operator):
                                     bpy.context.active_object.rotation_quaternion[2] ,
                                     bpy.context.active_object.rotation_quaternion[3]))
 
-                bpy.context.active_object.rotation_quaternion @=  myLampToVector(myLamp)
+                bpy.context.active_object.rotation_quaternion =  bpy.context.active_object.rotation_quaternion @ myLamp.rotation_quaternion #myLampToVector(myLamp)
 
 
                 ########. vertex normals according to world::
