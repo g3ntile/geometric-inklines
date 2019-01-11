@@ -25,11 +25,11 @@ bl_info = {
     "name": "GEO INKlines",
     "category": "Object",
     "author": "Pablo Gentile",
-    "version": (0, 0, 47),
+    "version": (0, 0, 5),
     "blender": (2, 80, 0),
     "location": "View3D > Tool Shelf",
     "description": "Adds and administrates a combo of modifiers, vertex groups and materialas (TO DO) to generate geometric inverted hull outlines to objects that work in realtime",
-    "warning": "Still very alpha. Handle with care.",
+    "warning": "Beta version. Handle with care.",
     "wiki_url": "https://github.com/g3ntile/geometric-inklines/wiki",
     "tracker_url": "https://github.com/g3ntile/geometric-inklines" ,
 }
@@ -427,7 +427,7 @@ class genAddOutlineMaterial(bpy.types.Operator):
     
 class genOutlinesPanel(bpy.types.Panel):
     """Creates a Panel in the N Panel"""
-    bl_label = "GEO INKlines alpha 0.47"
+    bl_label = "GEO INKlines beta 0.5"
     bl_idname = "OBJECT_PT_GEOINKlines"
     #bl_space_type = 'PROPERTIES'
     #bl_region_type = 'WINDOW'
