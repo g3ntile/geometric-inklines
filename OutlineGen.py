@@ -241,7 +241,7 @@ class genNormals2Thickness(bpy.types.Operator):
                                     bpy.context.active_object.rotation_quaternion[2] ,
                                     bpy.context.active_object.rotation_quaternion[3]))
 
-                bpy.context.active_object.rotation_quaternion =  bpy.context.active_object.rotation_quaternion @ myLamp.rotation_quaternion #myLampToVector(myLamp)
+                bpy.context.active_object.rotation_quaternion =  bpy.context.active_object.rotation_quaternion @ myLampToVector(myLamp) #myLamp.rotation_quaternion #
 
 
                 ########. vertex normals according to world::
