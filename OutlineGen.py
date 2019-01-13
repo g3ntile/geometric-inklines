@@ -191,10 +191,12 @@ class genNormals2Thickness(bpy.types.Operator):
         # not working yet
         def myLampToVector(lampObj):
             return( mathutils.Quaternion((
-                                    lampObj.rotation_quaternion[0], 
-                                    -lampObj.rotation_quaternion[1], 
-                                    -lampObj.rotation_quaternion[2],
-                                    -lampObj.rotation_quaternion[3])) )
+                # tries to flip the quaternion somehow to get the shadows right
+                # i don't get at all what I'm doing here, this is just intuitive math 
+                                    -lampObj.rotation_quaternion[0], 
+                                    lampObj.rotation_quaternion[1], 
+                                    lampObj.rotation_quaternion[2],
+                                    lampObj.rotation_quaternion[3])) )
 
         # check if group exists and create it 
         if "__thickness__" in bpy.context.active_object.vertex_groups:
@@ -230,9 +232,10 @@ class genNormals2Thickness(bpy.types.Operator):
                 print('\n\n\n Sun!')
                 # FOR SUN LIGHTS
                 # ROTATE OBJ OPPOSITE TO LIGHT
-                #rotModeBKP_ob = bpy.context.active_object.rotation_mode
-                #rotModeBKP_li = myLamp.rotation_mode
+                            #rotModeBKP_ob = bpy.context.active_object.rotation_mode
+                            #rotModeBKP_li = myLamp.rotation_mode
 
+                # change mode to quaternion to avoid glitches and locks and simplify math
                 myLamp.rotation_mode = 'QUATERNION'
                 bpy.context.active_object.rotation_mode = 'QUATERNION'
                 rotationBackup = ((
@@ -241,7 +244,10 @@ class genNormals2Thickness(bpy.types.Operator):
                                     bpy.context.active_object.rotation_quaternion[2] ,
                                     bpy.context.active_object.rotation_quaternion[3]))
 
-                bpy.context.active_object.rotation_quaternion =  bpy.context.active_object.rotation_quaternion @ myLampToVector(myLamp) #myLamp.rotation_quaternion #
+                
+                # multiply the quaternion of the obj with some sort of flipped quaternion of the lamp
+                # WIP
+                bpy.context.active_object.rotation_quaternion =   myLampToVector(myLamp) @ bpy.context.active_object.rotation_quaternion #myLamp.rotation_quaternion #
 
 
                 ########. vertex normals according to world::
@@ -259,7 +265,7 @@ class genNormals2Thickness(bpy.types.Operator):
                 myWeights = [ ((-v[2]+1)/2 ) for v in myCrossedNormals]
 
 
-                # Restore rotation
+                # Restore rotation 
                 bpy.context.active_object.rotation_mode = 'QUATERNION'
                 bpy.context.active_object.rotation_quaternion = rotationBackup
                 bpy.context.active_object.rotation_mode = rotModeBKP_ob
