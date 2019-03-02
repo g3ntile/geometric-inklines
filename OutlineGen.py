@@ -341,7 +341,7 @@ class genAddOutlineMaterial(bpy.types.Operator):
             # enable transparency
             outMat.blend_method = 'BLEND'
             # set vewport color
-            outMat.diffuse_color = (0,0,0)
+            outMat.diffuse_color = (0,0,0,1)
             # get the nodes
             nodes = outMat.node_tree.nodes
             print("\n\n === " , nodes)
