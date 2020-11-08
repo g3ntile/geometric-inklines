@@ -66,7 +66,13 @@ class genOutline(bpy.types.Operator):
         C.object.modifiers["Outline"].show_expanded = False
         C.object.modifiers["Outline"].thickness_vertex_group = 0.5
         C.object.modifiers["Outline"].vertex_group = "__thickness__"
-        
+        # SETS BACKFACE CULLING
+        for area in bpy.context.screen.areas:
+            if area.type == 'VIEW_3D':
+                for space in area.spaces:
+                    if space.type == 'VIEW_3D':
+                        space.shading.show_backface_culling = True
+                        break
         return {'FINISHED'}
     
 # ÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷÷  Remove Outline Operator
@@ -420,8 +426,6 @@ class genAddOutlineMaterial(bpy.types.Operator):
 
             #
 
-        # SETS BACKFACE CULLING
-        # bpy.data.screens["Layout"].shading.show_backface_culling = True
 
         return {'FINISHED'}
 
