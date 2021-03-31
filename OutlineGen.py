@@ -25,7 +25,7 @@ bl_info = {
     "name": "GEO INKlines",
     "category": "Object",
     "author": "Pablo Gentile",
-    "version": (0, 0, 5),
+    "version": (0, 0, 65),
     "blender": (2, 80, 0),
     "location": "View3D > Tool Shelf",
     "description": "Adds and administrates a combo of modifiers, vertex groups and materialas (TO DO) to generate geometric inverted hull outlines to objects that work in realtime",
@@ -205,6 +205,12 @@ class genNormals2Thickness(bpy.types.Operator):
         else:
             print("nope :-( it doesn't" )
             myGroup = bpy.context.active_object.vertex_groups.new(name=groupName)
+
+        # move the grpup to the top:
+        if (myGroup.index) > 0:
+            bpy.ops.object.vertex_group_set_active(group=context.active_object.vertex_groups[-1].name )
+            for myiteration in range (len(context.active_object.vertex_groups)+1):
+                bpy.ops.object.vertex_group_move(direction='UP')
         
 
         # Store the mesh
@@ -433,7 +439,7 @@ class genAddOutlineMaterial(bpy.types.Operator):
     
 class genOutlinesPanel(bpy.types.Panel):
     """Creates a Panel in the N Panel"""
-    bl_label = "GEO INKlines beta 0.5"
+    bl_label = "GEO INKlines beta 0.65"
     bl_idname = "OBJECT_PT_GEOINKlines"
     #bl_space_type = 'PROPERTIES'
     #bl_region_type = 'WINDOW'
