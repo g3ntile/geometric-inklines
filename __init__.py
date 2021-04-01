@@ -53,9 +53,9 @@ def my_handler(scene):
                 #print(scene.frame_current)
 
 
-# Convierte la rotacion de la lampara en vector
+# Converts SUN rotation into a vector
 def myLampToVector(lampObj):
-    """Converts the lamp rotation into a vector"""
+    """Converts the Sun rotation into a vector"""
     return( mathutils.Quaternion((
         # tries to flip the quaternion somehow to get the shadows right
         # i don't get at all what I'm doing here, this is just intuitive math 
@@ -414,8 +414,11 @@ class genAddOutlineMaterial(bpy.types.Operator):
             outMat.use_nodes = True
             # enable transparency
             outMat.blend_method = 'BLEND'
+            # no shadows
+            outMat.shadow_method = 'NONE'
             # set vewport color
             outMat.diffuse_color = (0,0,0,1)
+
             # get the nodes
             nodes = outMat.node_tree.nodes
             print("\n\n === " , nodes)
@@ -536,7 +539,7 @@ class genOutlinesPanel(bpy.types.Panel):
         row = layout.row()
 
         col = layout.column()
-        col.prop(ink_tool, "ink_constantUpdate")
+        
         col.prop(ink_tool, "ink_Light")
         col.prop(ink_tool, "ink_vertexGroup")
        
@@ -612,6 +615,9 @@ class genOutlinesPanel(bpy.types.Panel):
             row.prop(C.object.modifiers['InnerLine'], "material", text="Inner line material offset")
         except Exception: 
             pass
+
+        col = layout.column()
+        col.prop(ink_tool, "ink_constantUpdate")
 
 
 
