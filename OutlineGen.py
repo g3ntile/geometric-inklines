@@ -25,7 +25,7 @@ bl_info = {
     "name": "Geometry INKlines",
     "category": "Object",
     "author": "Pablo Gentile",
-    "version": (0, 1, 1),
+    "version": (0, 1, 2),
     "blender": (2, 80, 0),
     "location": "View3D > Tool Shelf",
     "description": "Adds and administrates a combo of modifiers, vertex groups and materials to generate geometric inverted hull outlines to objects that work in realtime",
@@ -48,7 +48,7 @@ def my_handler(scene):
         vertexGroup = scene.ink_tool.ink_vertexGroup
         print ('!update! ' + vertexGroup)
         for myobj in scene.objects:
-            if vertexGroup in myobj.vertex_groups:
+            if vertexGroup in myobj.vertex_groups and myobj.type == 'MESH':
                 updateThickness(bpy.context, myobj, vertexGroup)
                 #print(myobj.name)
                 print(myobj.name + ' updated at frame '+  str(scene.frame_current))
@@ -524,7 +524,7 @@ class genAddOutlineMaterial(bpy.types.Operator):
     
 class genOutlinesPanel(bpy.types.Panel):
     """Creates a Panel in the N Panel"""
-    bl_label = "Geometry INKlines 0.1.1"
+    bl_label = bl_info['name'] + str(bl_info['version'])
     bl_idname = "OBJECT_PT_GEOINKlines"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
