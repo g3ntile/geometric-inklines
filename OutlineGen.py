@@ -25,7 +25,7 @@ bl_info = {
     "name": "Geometry INKlines",
     "category": "Object",
     "author": "Pablo Gentile",
-    "version": (0, 1, 2),
+    "version": (0, 1, 3),
     "blender": (2, 80, 0),
     "location": "View3D > Tool Shelf",
     "description": "Adds and administrates a combo of modifiers, vertex groups and materials to generate geometric inverted hull outlines to objects that work in realtime",
@@ -54,6 +54,13 @@ def my_handler(scene):
                 print(myobj.name + ' updated at frame '+  str(scene.frame_current))
                 #print(scene.frame_current)
 
+@persistent
+def my_lockrenderhandler(scene):
+    bpy.types.RenderSettings.use_lock_interface = scene.ink_tool.ink_constantUpdate
+
+@persistent
+def my_unlockrenderhandler(scene):
+    bpy.types.RenderSettings.use_lock_interface = False
 
 # Converts SUN rotation into a vector
 def myLampToVector(lampObj):
@@ -98,7 +105,7 @@ def updateThickness(context, myobj, groupName):
         if myLamp:
             hasLight = True
             myLightIsSun = False
-            myLightVector = myLamp.location
+            myLightVector = myLamp.matrix_world.to_translation()
 
             if myLamp.type == 'LIGHT':
                 if myLamp.data.type == 'SUN':
@@ -654,10 +661,14 @@ def register():
         bpy.utils.register_class(cls)
     bpy.types.Scene.ink_tool = bpy.props.PointerProperty(type=Ink_settings)
     bpy.app.handlers.frame_change_pre.append(my_handler)
+    bpy.app.handlers.render_pre.append(my_lockrenderhandler)
+    bpy.app.handlers.render_post.append(my_unlockrenderhandler)
     print ('Geo INKLines registered!')
 
 def unregister():
-    bpy.app.handlers.frame_change_pre.append(my_handler)
+    bpy.app.handlers.render_post.remove(my_unlockrenderhandler)
+    bpy.app.handlers.render_pre.remove(my_lockrenderhandler)
+    bpy.app.handlers.frame_change_pre.remove(my_handler)
     del bpy.types.Scene.ink_tool
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
