@@ -25,7 +25,7 @@ bl_info = {
     "name": "Geometry INKlines",
     "category": "Object",
     "author": "Pablo Gentile",
-    "version": (0, 1, 0),
+    "version": (0, 1, 1),
     "blender": (2, 80, 0),
     "location": "View3D > Tool Shelf",
     "description": "Adds and administrates a combo of modifiers, vertex groups and materials to generate geometric inverted hull outlines to objects that work in realtime",
@@ -37,8 +37,10 @@ bl_info = {
 import bpy
 import mathutils
 from math import radians
+from bpy.app.handlers import persistent
 
 # Handles frame by frame updating
+@persistent
 def my_handler(scene):
     """Handles frame by frame updating"""
     
@@ -49,7 +51,7 @@ def my_handler(scene):
             if vertexGroup in myobj.vertex_groups:
                 updateThickness(bpy.context, myobj, vertexGroup)
                 #print(myobj.name)
-                #print('updated at frame')
+                print(myobj.name + ' updated at frame '+  str(scene.frame_current))
                 #print(scene.frame_current)
 
 
@@ -66,152 +68,159 @@ def myLampToVector(lampObj):
 
 # Handles calculation of the thickness vertex group in relation to the light source.
 def updateThickness(context, myobj, groupName):
-    # check if group exists and create it 
-    if groupName in myobj.vertex_groups:
-        print("yes! exists")
-        myGroup = myobj.vertex_groups[groupName]
-    else:
-        print("nope :-( it doesn't" )
-        myGroup = myobj.vertex_groups.new(name=groupName)
+    if myobj.type == 'MESH' or 'GPENCIL':
+        # check if group exists and create it 
+        if groupName in myobj.vertex_groups:
+            print("yes! exists")
+            myGroup = myobj.vertex_groups[groupName]
+        else:
+            print("nope :-( it doesn't" )
+            myGroup = myobj.vertex_groups.new(name=groupName)
 
-    # move the grpup to the top:
-    if (myGroup.index) > 0:
-        bpy.ops.object.vertex_group_set_active(group=myobj.vertex_groups[-1].name )
-        for myiteration in range (len(myobj.vertex_groups)+1):
-            bpy.ops.object.vertex_group_move(direction='UP')
-    
-    ### 
-    # lights math
-    # Includes light if present 9
-    myLamp = None
-    
-    hasLight = False
-    myLightVector = mathutils.Vector((0,0,65535))
-
-    #new method:::
-    
-    myLamp = context.scene.ink_tool.ink_Light
-    if myLamp:
-        hasLight = True
-        myLightIsSun = False
-        myLightVector = myLamp.location
-
-        if myLamp.type == 'LIGHT':
-            if myLamp.data.type == 'SUN':
-                myLightVector = myLamp.rotation_euler
-                myLightIsSun = True
-            #else:
-                #myLightVector = myLamp.location
-                # myLightIsSun = False
-    else:
+        # move the grpup to the top:
+        if (myGroup.index) > 0:
+            bpy.ops.object.vertex_group_set_active(group=myobj.vertex_groups[-1].name )
+            for myiteration in range (len(myobj.vertex_groups)+1):
+                bpy.ops.object.vertex_group_move(direction='UP')
+    if myobj.type == 'MESH':
+        ### MESH calculations
+        # lights math
+        # Includes light if present 9
+        print ('calculating light incidence for MESH ' + myobj.name)
+        myLamp = None
+        
         hasLight = False
+        myLightVector = mathutils.Vector((0,0,65535))
 
-    # Store the mesh
-    mesh = myobj.data
-    print("==== object: ", mesh.name)
+        #new method:::
+        
+        myLamp = context.scene.ink_tool.ink_Light
+        if myLamp:
+            hasLight = True
+            myLightIsSun = False
+            myLightVector = myLamp.location
 
-    # backup rotation mode OBJECT
-    rotModeBKP_ob = myobj.rotation_mode
+            if myLamp.type == 'LIGHT':
+                if myLamp.data.type == 'SUN':
+                    myLightVector = myLamp.rotation_euler
+                    myLightIsSun = True
+                #else:
+                    #myLightVector = myLamp.location
+                    # myLightIsSun = False
+        else:
+            hasLight = False
 
-    if hasLight:
-        # backup rotation mode LIGHT
-        rotModeBKP_li = myLamp.rotation_mode
-    
-        if not myLightIsSun:
-            print(myLamp.name)
-            print('\n\n\n Point!')
+        # Store the mesh
+        mesh = myobj.data
+        print("==== object: ", mesh.name)
 
-            #POINT lights, spot, area
-            # Sets weight based on angle with light DOT version
+        # backup rotation mode OBJECT
+        rotModeBKP_ob = myobj.rotation_mode
+
+        if hasLight:
+            # backup rotation mode LIGHT
+            rotModeBKP_li = myLamp.rotation_mode
+        
+            if not myLightIsSun:
+                print(myLamp.name)
+                print('\n\n\n Point!')
+
+                #POINT lights, spot, area
+                # Sets weight based on angle with light DOT version
+                # take rotation into account:
+                myobj.rotation_mode = 'XYZ'
+                myCrossedNormals = [ myobj.rotation_euler.to_matrix() @ v.normal for v in mesh.vertices  ]
+
+                myCrossedNormals = [ ((v.dot(myLightVector) * -1+1)/2) for v in myCrossedNormals ]
+                myWeights = [ ((v)) for v in myCrossedNormals]
+            else: 
+                print('\n\n\n Sun!')
+                # FOR SUN LIGHTS
+                # ROTATE OBJ OPPOSITE TO LIGHT
+                            #rotModeBKP_ob = bpy.context.active_object.rotation_mode
+                            #rotModeBKP_li = myLamp.rotation_mode
+
+                # change mode to quaternion to avoid glitches and locks and simplify math
+                myLamp.rotation_mode = 'QUATERNION'
+                myobj.rotation_mode = 'QUATERNION'
+                rotationBackup = ((
+                                    myobj.rotation_quaternion[0] , 
+                                    myobj.rotation_quaternion[1] , 
+                                    myobj.rotation_quaternion[2] ,
+                                    myobj.rotation_quaternion[3]))
+
+                
+                # multiply the quaternion of the obj with some sort of flipped quaternion of the lamp
+                # WIP
+                myobj.rotation_quaternion =   myLampToVector(myLamp) @ myobj.rotation_quaternion #myLamp.rotation_quaternion #
+
+
+                ########. vertex normals according to world::
+                #Actually it is, when the scaling factors are not the same (as @mifth pointed out) :
+                # for v in bpy.context.active_object.data.vertices:
+                #     myCrossedNormals[v] = v.normal.to_4d()
+                #     myCrossedNormals[v].w = 0
+                #     myCrossedNormals[v] = (bpy.context.active_object.matrix_world @ myCrossedNormals).to_3d()
+
+                # If you know they are all the same, you can use :
+                myobj.rotation_mode = 'XYZ'
+                myCrossedNormals = [ myobj.rotation_euler.to_matrix() @ v.normal for v in mesh.vertices  ]
+                
+                #print( "\n\nto matrix: " , myCrossedNormals)
+                myWeights = [ ((-v[2]+1)/2 ) for v in myCrossedNormals]
+
+
+                # Restore rotation 
+                myobj.rotation_mode = 'QUATERNION'
+                myobj.rotation_quaternion = rotationBackup
+                myobj.rotation_mode = rotModeBKP_ob
+                
+
+                
+            #restore rotation mode LIGHT
+            myLamp.rotation_mode = rotModeBKP_li
+        else: 
+            
+            print('\n\n\n No light!')
+            
             # take rotation into account:
             myobj.rotation_mode = 'XYZ'
             myCrossedNormals = [ myobj.rotation_euler.to_matrix() @ v.normal for v in mesh.vertices  ]
-
-            myCrossedNormals = [ ((v.dot(myLightVector) * -1+1)/2) for v in myCrossedNormals ]
-            myWeights = [ ((v)) for v in myCrossedNormals]
-        else: 
-            print('\n\n\n Sun!')
-            # FOR SUN LIGHTS
-            # ROTATE OBJ OPPOSITE TO LIGHT
-                        #rotModeBKP_ob = bpy.context.active_object.rotation_mode
-                        #rotModeBKP_li = myLamp.rotation_mode
-
-            # change mode to quaternion to avoid glitches and locks and simplify math
-            myLamp.rotation_mode = 'QUATERNION'
-            myobj.rotation_mode = 'QUATERNION'
-            rotationBackup = ((
-                                myobj.rotation_quaternion[0] , 
-                                myobj.rotation_quaternion[1] , 
-                                myobj.rotation_quaternion[2] ,
-                                myobj.rotation_quaternion[3]))
-
             
-            # multiply the quaternion of the obj with some sort of flipped quaternion of the lamp
-            # WIP
-            myobj.rotation_quaternion =   myLampToVector(myLamp) @ myobj.rotation_quaternion #myLamp.rotation_quaternion #
-
-
-            ########. vertex normals according to world::
-            #Actually it is, when the scaling factors are not the same (as @mifth pointed out) :
-            # for v in bpy.context.active_object.data.vertices:
-            #     myCrossedNormals[v] = v.normal.to_4d()
-            #     myCrossedNormals[v].w = 0
-            #     myCrossedNormals[v] = (bpy.context.active_object.matrix_world @ myCrossedNormals).to_3d()
-
-            # If you know they are all the same, you can use :
-            myobj.rotation_mode = 'XYZ'
-            myCrossedNormals = [ myobj.rotation_euler.to_matrix() @ v.normal for v in mesh.vertices  ]
-            
-            #print( "\n\nto matrix: " , myCrossedNormals)
-            myWeights = [ ((-v[2]+1)/2 ) for v in myCrossedNormals]
-
-
-            # Restore rotation 
-            myobj.rotation_mode = 'QUATERNION'
-            myobj.rotation_quaternion = rotationBackup
-            myobj.rotation_mode = rotModeBKP_ob
-            
-
-            
-        #restore rotation mode LIGHT
-        myLamp.rotation_mode = rotModeBKP_li
-    else: 
+            # Sets weight based on vertex z normal
+            myWeights = [ ((-v[2]+1)/2) for v in myCrossedNormals]
+            #myWeights = [ ((-v.normal[2]+1)/2) for v in mesh.vertices] 
         
-        print('\n\n\n No light!')
+        # restore rotations
+        myobj.rotation_mode = rotModeBKP_ob
+        ### myLamp.rotation_mode = rotModeBKP_li 
         
-        # take rotation into account:
-        myobj.rotation_mode = 'XYZ'
-        myCrossedNormals = [ myobj.rotation_euler.to_matrix() @ v.normal for v in mesh.vertices  ]
-        
-        # Sets weight based on vertex z normal
-        myWeights = [ ((-v[2]+1)/2) for v in myCrossedNormals]
-        #myWeights = [ ((-v.normal[2]+1)/2) for v in mesh.vertices] 
-    
-    # restore rotations
-    myobj.rotation_mode = rotModeBKP_ob
-    ### myLamp.rotation_mode = rotModeBKP_li 
-    
-    # Get the index of the required group
-    index = myobj.vertex_groups[groupName].index
+        # Get the index of the required group
+        index = myobj.vertex_groups[groupName].index
 
-    # Exit Edit mode or fails
-    bpy.ops.object.mode_set(mode='OBJECT')
+        # Exit Edit mode or fails
+        ###### bpy.ops.object.mode_set(mode='OBJECT')
 
-    # Sets the calculated weights to each vertex in the mesh
-    for v in mesh.vertices:
-        #print ("i = ", i)
-        # print ("v = ", v)
-        # print ("w = ", myWeights[v.index]) 
-        #obj.vertex_groups[index].add([v], myWeights[v], 'REPLACE')
-        myGroup.add([v.index], myWeights[v.index], 'REPLACE')
+        # Sets the calculated weights to each vertex in the mesh
+        for v in mesh.vertices:
+            #print ("i = ", i)
+            # print ("v = ", v)
+            # print ("w = ", myWeights[v.index]) 
+            #obj.vertex_groups[index].add([v], myWeights[v], 'REPLACE')
+            myGroup.add([v.index], myWeights[v.index], 'REPLACE')
 
-    # Assign the map to the Outline if it exists
-    try:
-        myobj.modifiers["Outline"].vertex_group = groupName
-    except:
-        pass
+        # Assign the map to the Outline if it exists
+        try:
+            myobj.modifiers["Outline"].vertex_group = groupName
+        except:
+            pass
+        myobj.data.update() 
+
+    elif myobj.type == 'GPENCIL':
+        print ('GPENCIL, no calculation needed')
     # Update to show results  
-    myobj.data.update() 
+    
+    print(myobj.name + ' updated at frame '+  str(context.scene.frame_current))
 
 
 # Objeto que guarda las variables del panel
@@ -370,7 +379,7 @@ class genNormals2Thickness(bpy.types.Operator):
     
     @classmethod
     def poll(cls, context):
-        return context.active_object is not None
+        return context is not None
     
     def execute(self, context):
         vertexGroup = context.scene.ink_tool.ink_vertexGroup
@@ -515,7 +524,7 @@ class genAddOutlineMaterial(bpy.types.Operator):
     
 class genOutlinesPanel(bpy.types.Panel):
     """Creates a Panel in the N Panel"""
-    bl_label = "Geometry INKlines 0.1.0"
+    bl_label = "Geometry INKlines 0.1.1"
     bl_idname = "OBJECT_PT_GEOINKlines"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
@@ -645,12 +654,15 @@ def register():
         bpy.utils.register_class(cls)
     bpy.types.Scene.ink_tool = bpy.props.PointerProperty(type=Ink_settings)
     bpy.app.handlers.frame_change_pre.append(my_handler)
+    print ('Geo INKLines registered!')
 
 def unregister():
     bpy.app.handlers.frame_change_pre.append(my_handler)
     del bpy.types.Scene.ink_tool
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
+
+    print ('Geo INKLines unregistered!')
 
 
 if __name__ == "__main__":
