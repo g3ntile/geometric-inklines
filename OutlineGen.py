@@ -25,7 +25,7 @@ bl_info = {
     "name": "Geometry INKlines",
     "category": "Object",
     "author": "Pablo Gentile",
-    "version": (0, 1, 3),
+    "version": (0, 1, 4),
     "blender": (2, 80, 0),
     "location": "View3D > Tool Shelf",
     "description": "Adds and administrates a combo of modifiers, vertex groups and materials to generate geometric inverted hull outlines to objects that work in realtime",
@@ -63,15 +63,15 @@ def my_unlockrenderhandler(scene):
     bpy.types.RenderSettings.use_lock_interface = False
 
 # Converts SUN rotation into a vector
-def myLampToVector(lampObj):
+def myLampToVector(my_quaternion):
     """Converts the Sun rotation into a vector"""
     return( mathutils.Quaternion((
         # tries to flip the quaternion somehow to get the shadows right
         # i don't get at all what I'm doing here, this is just intuitive math 
-                            -lampObj.rotation_quaternion[0], 
-                            lampObj.rotation_quaternion[1], 
-                            lampObj.rotation_quaternion[2],
-                            lampObj.rotation_quaternion[3])) )
+                            -my_quaternion[0], 
+                            my_quaternion[1], 
+                            my_quaternion[2],
+                            my_quaternion[3])) )
 
 # Handles calculation of the thickness vertex group in relation to the light source.
 def updateThickness(context, myobj, groupName):
@@ -96,6 +96,7 @@ def updateThickness(context, myobj, groupName):
         print ('calculating light incidence for MESH ' + myobj.name)
         myLamp = None
         
+        # vertical vector to use as default if no light is selected:
         hasLight = False
         myLightVector = mathutils.Vector((0,0,65535))
 
@@ -103,19 +104,27 @@ def updateThickness(context, myobj, groupName):
         
         myLamp = context.scene.ink_tool.ink_Light
         if myLamp:
+            # defaults for all lamps except Sun
             hasLight = True
             myLightIsSun = False
+            # position with parenting and all cleared:
             myLightVector = myLamp.matrix_world.to_translation()
 
+            # for Sun lights:
             if myLamp.type == 'LIGHT':
                 if myLamp.data.type == 'SUN':
-                    myLightVector = myLamp.rotation_euler
+                    myLightVector = myLamp.rotation_euler # may be obsolete if the quaternion version works
                     myLightIsSun = True
-                #else:
-                    #myLightVector = myLamp.location
-                    # myLightIsSun = False
-        else:
-            hasLight = False
+
+                    # quaternion version (stores the Quat version to avoid converting the rot mode:
+                    if myLamp.rotation_mode == 'QUATERNION':
+                        mySunQuaternion = mathutils.Quaternion(myLamp.rotation_quaternion)
+                    else:
+                        mySunEuler = mathutils.Euler(myLamp.rotation_euler , myLamp.rotation_mode)
+                        mySunQuaternion = mySunEuler.to_quaternion()
+                
+        # else:
+        #     hasLight = False
 
         # Store the mesh
         mesh = myobj.data
@@ -126,7 +135,7 @@ def updateThickness(context, myobj, groupName):
 
         if hasLight:
             # backup rotation mode LIGHT
-            rotModeBKP_li = myLamp.rotation_mode
+            rotModeBKP_li = myLamp.rotation_mode #po
         
             if not myLightIsSun:
                 print(myLamp.name)
@@ -148,7 +157,7 @@ def updateThickness(context, myobj, groupName):
                             #rotModeBKP_li = myLamp.rotation_mode
 
                 # change mode to quaternion to avoid glitches and locks and simplify math
-                myLamp.rotation_mode = 'QUATERNION'
+                #### myLamp.rotation_mode = 'QUATERNION'#obsolete
                 myobj.rotation_mode = 'QUATERNION'
                 rotationBackup = ((
                                     myobj.rotation_quaternion[0] , 
@@ -159,7 +168,7 @@ def updateThickness(context, myobj, groupName):
                 
                 # multiply the quaternion of the obj with some sort of flipped quaternion of the lamp
                 # WIP
-                myobj.rotation_quaternion =   myLampToVector(myLamp) @ myobj.rotation_quaternion #myLamp.rotation_quaternion #
+                myobj.rotation_quaternion =   myLampToVector(mySunQuaternion) @ myobj.rotation_quaternion #myLamp.rotation_quaternion #
 
 
                 ########. vertex normals according to world::
@@ -185,7 +194,7 @@ def updateThickness(context, myobj, groupName):
 
                 
             #restore rotation mode LIGHT
-            myLamp.rotation_mode = rotModeBKP_li
+            ### myLamp.rotation_mode = rotModeBKP_li # obsolete
         else: 
             
             print('\n\n\n No light!')
