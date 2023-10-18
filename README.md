@@ -1,6 +1,20 @@
 # geometric-inklines
-Blender 3d 2.80 addon. Creates and administrates a combo of modifiers, vertex groups and materials to generate geometric inverted hull outlines, and bevel based inner lines to objects, that work in realtime.
-**Remember this is in a very alpha state: most of it works ok, but expect bugs, warnings and one or two broken features ;-)**
+Blender 3d 2.80 addon. Tested up to 4.1 and still works.
+It creates and administrates a combo of modifiers, vertex groups and materials to generate geometric inverted hull outlines, and bevel based inner lines to objects, that work in realtime.
+
+## Key features
+* creates the outlines material
+* creates the inverted hull
+* manages the thickness using a vertex map
+* you may link the thinkness to a lightsource
+* you can update the thickness each frame for animation
+* has an opitonal feature for hardsurface inner lines
+
+### Limitations and known issues
+* the light based thickness calculation doesn't seem to take deformations into account, so shadows are pre-rig. Seems to be a Blender limitation. You know a way to solve this please tell me.
+
+**Remember this is currently in an eternal beta stage: it works, in some cases it may yield better or worse results, depending on the case. It is as it is.**
+[![quick and dirty video demo](https://img.youtube.com/vi/lrTWmnrvjx4/maxresdefault.jpg)](https://youtu.be/lrTWmnrvjx4?si=XJFOpNs0ITbBg-BH)
 
 ## INSTALL
 This addon works inside Blender 3D 2.80.
